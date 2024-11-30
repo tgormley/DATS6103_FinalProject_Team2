@@ -1,0 +1,72 @@
+"""
+## Context: 
+The Diabetes prediction dataset is a collection of medical and demographic data from patients, along with their diabetes status (positive or negative). 
+The data includes features such as age, gender, body mass index (BMI), hypertension, heart disease, smoking history, HbA1c level, and blood glucose level. 
+This dataset will be used to build machine learning models to predict diabetes in patients based on their medical history and demographic information. 
+This can be useful for healthcare professionals in identifying patients who may be at risk of developing diabetes and in developing personalized treatment plans. 
+Additionally, the dataset will be used by researchers to explore the relationships between various medical and demographic factors and the likelihood of developing diabetes.
+
+## Objectives/SMART Questions:
+  * What are the primary risk factors (e.g., blood glucose level, BMI, age, hypertension) for diabetes in this population, and how accurately can they predict the likelihood of a diabetes diagnosis?
+  * Are there any notable differences in diabetes prevalence based on gender, age, or smoking history? For example, does smoking history combined with high blood glucose level increase the risk?
+  * How does the distribution of BMI and HbA1c levels differ between those with and without diabetes?
+  * How sensitive are the models to changes in certain variables (e.g., slight increases in blood glucose or BMI)? Can we identify an actionable threshold for intervention?
+
+## Dataset :
+
+The data contains patient details, lab measurements and binary diabetes status.
+* **gender** - Patient gender
+* **age** - Age of the patient
+* **hypertension** - 0-No, 1-Yes
+* **heart_disease** - 0-No, 1-Yes
+* **smoking_history** - never, current, not current, former, No Info
+* **BMI** - Body Mass Index
+* **HbA1c_level** - HbA1c
+* **blood_glucose_level** - Blood glucose level
+
+* **diabetes** - 0-No, 1-Yes
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# algorithms to use
+from sklearn.linear_model import LogisticRegression
+
+"""### Read the dataset"""
+
+#reading the dataset
+df = pd.read_csv('diabetes_prediction_dataset.csv')
+
+df.head()
+
+"""### Printing the information"""
+
+df.info()
+
+"""**Observations:**
+- There are 100000 observations and 9 columns.
+- All the columns have 100000 non-null values i.e. there are no missing values in the data.
+"""
+
+print(df.columns)
+
+"""**Let's check the unique values in each column**"""
+
+#checking unique values in each column
+unique_counts = df.nunique()
+print(unique_counts)
+
+"""**Observations:**
+- No columns have only 1 unique value in them, so no need to drop any columns.
+- On the basis of number of unique values in each column and the data description, we can identify the continuous and categorical columns in the data.
+
+Let's define lists for numerical and categorical columns to apply explore them separately.
+"""
+
+# Change binary 0 and 1 data to categorical 'no' and 'yes'
+df['hypertension'] = df['hypertension'].replace({0:'no', 1:'yes'})
+df['heart_disease'] = df['heart_disease'].replace({0:'no', 1:'yes'})
+df['diabetes'] = df['diabetes'].replace({0:'no', 1:'yes'})
