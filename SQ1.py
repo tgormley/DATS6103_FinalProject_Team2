@@ -70,6 +70,20 @@ importances = rf.feature_importances_
 feature_importances = pd.DataFrame({'Feature': features, 'Importance': importances})
 print(feature_importances.sort_values(by='Importance', ascending=False))
 
+rf_features = {
+    'Feature': ['HbA1c_level', 'blood_glucose_level', 'bmi', 'age', 'hypertension', 'heart_disease'],
+    'Importance': [0.407410, 0.327367, 0.144707, 0.101647, 0.011596, 0.007273]
+}
+rf_df = pd.DataFrame(rf_features)
+
+plt.figure(figsize=(8, 6))
+sns.barplot(x='Importance', y='Feature', data=rf_df.sort_values(by='Importance', ascending=False), palette="viridis")
+plt.title("Feature Importance (Random Forest)")
+plt.xlabel("Importance Score")
+plt.ylabel("Feature")
+plt.show()
+
+
 from sklearn.linear_model import LogisticRegression
 
 # Train a Logistic Regression model
