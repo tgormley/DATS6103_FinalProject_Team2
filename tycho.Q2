@@ -26,14 +26,35 @@ The data contains patient details, lab measurements and binary diabetes status.
 
 * **diabetes** - 0-No, 1-Yes
 """
-
+#%%
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# algorithms to use
+#to scale the data using z-score
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.model_selection import train_test_split
+
+#algorithms to use
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+
+#Metrics to evaluate the model
+from sklearn.metrics import confusion_matrix, classification_report, precision_recall_curve
+
+#for tuning the model
+from sklearn.model_selection import GridSearchCV
+
+#to ignore warnings
+import warnings
+warnings.filterwarnings("ignore")
+
+import sys
+!{sys.executable} -m pip install openpyxl
 
 """### Read the dataset"""
 
@@ -70,3 +91,96 @@ Let's define lists for numerical and categorical columns to apply explore them s
 df['hypertension'] = df['hypertension'].replace({0:'no', 1:'yes'})
 df['heart_disease'] = df['heart_disease'].replace({0:'no', 1:'yes'})
 df['diabetes'] = df['diabetes'].replace({0:'no', 1:'yes'})
+
+
+#Creating numerical columns
+num_cols=['age','bmi','HbA1c_level','blood_glucose_level']
+
+#Creating categorical variables
+cat_cols= ['gender','hypertension','heart_disease','smoking_history','diabetes']
+
+"""### Let's start with univariate analysis of numerical columns"""
+
+#Checking summary statistics
+df[num_cols].describe().T
+
+#%%
+df['diabetes'] = df['diabetes'].replace({'no': 0, 'yes': 1}).astype(int)
+
+
+
+#%%
+# Count occurrences of each unique value in the column
+value_counts = df['gender'].value_counts()
+
+# Print the counts
+print("Counts of each category in the gender column:")
+print(value_counts)
+
+
+
+
+
+
+#%%
+# Calculate diabetes prevalence by gender
+gender_diabetes_prevalence = df.groupby('gender')['diabetes'].value_counts(normalize=True).unstack()
+
+# Plot the data directly
+gender_diabetes_prevalence.plot(kind='bar', stacked=True, figsize=(8, 6), color=['blue', 'orange'])
+plt.title('Diabetes Prevalence by Gender')
+plt.ylabel('Proportion')
+plt.xlabel('Gender')
+plt.legend(['No Diabetes', 'Diabetes'], title='Diabetes Status')
+plt.tight_layout()
+plt.show()
+
+
+
+#%%
+df['age_group'] = pd.cut(df['age'], bins=[0, 20, 40, 60, 80], labels=['Young', 'Young-adult', 'Adult', 'Elderly'])
+
+# Group by age group and calculate diabetes prevalence
+age_group_prevalence = df.groupby('age_group')['diabetes'].mean()
+print("Diabetes prevalence by age group:\n", age_group_prevalence)
+
+# Visualize the prevalence
+sns.barplot(x=age_group_prevalence.index, y=age_group_prevalence.values)
+plt.title('Diabetes Prevalence by Age Group')
+plt.ylabel('Prevalence')
+plt.show()
+
+
+
+# %%
+# Inspect unique values in the smoking_history column
+print("Unique Smoking History Categories:")
+print(df['smoking_history'].unique())
+
+# Calculate diabetes prevalence by smoking history
+smoking_prevalence = df.groupby('smoking_history')['diabetes'].mean()
+
+# Plot the data
+plt.figure(figsize=(10, 6))
+sns.barplot(x=smoking_prevalence.index, y=smoking_prevalence.values, palette='viridis')
+plt.title('Diabetes Prevalence by Smoking History')
+plt.ylabel('Diabetes Prevalence')
+plt.xlabel('Smoking History')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+# %%
+# Filter data for former smokers with diabetes
+former_smokers_with_diabetes = df[(df['smoking_history_former'] == 1) & (df['diabetes'] == 1)]
+
+# Plot the age distribution
+plt.figure(figsize=(10, 6))
+sns.histplot(former_smokers_with_diabetes['age'], bins=20, kde=True, color='green')
+plt.title('Age Distribution of Former Smokers with Diabetes')
+plt.xlabel('Age')
+plt.ylabel('Count')
+plt.show()
+
+
