@@ -299,12 +299,22 @@ print(df.head())
 ## Smart Question 4 ##
 ################
 
-# Preprocessing: Handle missing values
-df['smoking_history'] = df['smoking_history'].astype('category').cat.codes
+# Handle 'smoking_history' by encoding it to numeric values
+if 'smoking_history' in diabetes_data.columns:
+    diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+
+# Ensure all features are numeric
+print("Data types after preprocessing:")
+print(diabetes_data.dtypes)
 
 # Define features and target
-X = df.drop(columns=['diabetes'])
-y = df['diabetes']
+X = diabetes_data.drop(columns=['diabetes'])
+y = diabetes_data['diabetes']
+
+# Check for any remaining non-numeric data in X
+if not np.issubdtype(X.values.dtype, np.number):
+    print("Error: Non-numeric data found in features.")
+    print(X.head())
 
 # Split the data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
@@ -325,8 +335,8 @@ PartialDependenceDisplay.from_estimator(
 plt.show()
 
 # Threshold Analysis
-high_risk_glucose = df.groupby('diabetes')['blood_glucose_level'].mean()
-high_risk_bmi = df.groupby('diabetes')['bmi'].mean()
+high_risk_glucose = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
+high_risk_bmi = diabetes_data.groupby('diabetes')['bmi'].mean()
 
 threshold_glucose = high_risk_glucose[1] * 0.9  # 90% of diabetic group mean
 threshold_bmi = high_risk_bmi[1] * 0.9          # 90% of diabetic group mean
