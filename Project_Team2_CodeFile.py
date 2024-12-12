@@ -66,95 +66,38 @@ print(diabetes_data.head())
 ################
 ## Smart Question 2 ##
 ################
+def reverse_one_hot(df):
+    # Reverse 'gender' one-hot encoding
+    if 'gender_Male' in df.columns:
+        df['gender'] = df['gender_Male'].apply(lambda x: 'Male' if x == 1 else 'Female')
+        df.drop(columns=['gender_Male'], inplace=True)
+
+    # Reverse 'smoking_history' one-hot encoding
+    smoking_columns = [col for col in df.columns if col.startswith('smoking_history_')]
+    if smoking_columns:
+        df['smoking_history'] = df[smoking_columns].idxmax(axis=1).str.replace('smoking_history_', '')
+        df.drop(columns=smoking_columns, inplace=True)
+    
+    return df
+
 #%%
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Reverse one-hot encoding and assign to 'df'
+df = reverse_one_hot(diabetes_data)
+print(df.head())
 
-#to scale data using z-score
-from sklearn.preprocessing import StandardScaler
-from sklearn.preprocessing import LabelEncoder
-from sklearn.model_selection import train_test_split
-
-#algorithms to use
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
-
-#Metrics for evaluating models
-from sklearn.metrics import confusion_matrix, classification_report, precision_recall_curve, roc_auc_score
-
-#for tuning models
-from sklearn.model_selection import GridSearchCV
-
-#to ignore warnings
-import warnings
-warnings.filterwarnings("ignore")
-
-import sys
-!{sys.executable} -m pip install openpyxl
-
-"""### Read the dataset"""
-
-#reading the dataset
-df = pd.read_csv('diabetes_prediction_dataset.csv')
-
-df.head()
-
-"""### Printing the information"""
-
-df.info()
-
-"""**Observations:**
-- There are 100000 observations and 9 columns.
-- All the columns have 100000 non-null values i.e. there are no missing values in the data.
-"""
-
-print(df.columns)
-
-"""**Let's check the unique values in each column**"""
-
-#checking unique values in each column
-unique_counts = df.nunique()
-print(unique_counts)
-
-"""**Observations:**
-- No columns have only 1 unique value in them, so no need to drop any columns.
-- On the basis of number of unique values in each column and the data description, we can identify the continuous and categorical columns in the data.
-
-Let's define lists for numerical and categorical columns to apply explore them separately.
-"""
-
+#%%
 # Change binary 0 and 1 data to categorical 'no' and 'yes'
-df['hypertension'] = df['hypertension'].replace({0:'no', 1:'yes'})
-df['heart_disease'] = df['heart_disease'].replace({0:'no', 1:'yes'})
 df['diabetes'] = df['diabetes'].replace({0:'no', 1:'yes'})
 
-
+#%%
 #Creating numerical columns
-num_cols=['age','bmi','HbA1c_level','blood_glucose_level']
-
+num_cols=['age','blood_glucose_level']
 #Creating categorical variables
-cat_cols= ['gender','hypertension','heart_disease','smoking_history','diabetes']
-
-"""### Let's start with univariate analysis of numerical columns"""
-
-#Checking summary statistics
-df[num_cols].describe().T
+cat_cols= ['gender','smoking_history','diabetes']
 
 #%%
 df['diabetes'] = df['diabetes'].replace({'no': 0, 'yes': 1}).astype(int)
 
-#%%
-# Count occurrences of each unique value in the column
-value_counts = df['gender'].value_counts()
-
-# Print the counts
-print("Counts of each category in the gender column:")
-print(value_counts)
 
 
 #%%
@@ -169,8 +112,6 @@ plt.xlabel('Gender')
 plt.legend(['No Diabetes', 'Diabetes'], title='Diabetes Status')
 plt.tight_layout()
 plt.show()
-
-
 
 #%%
 df['age_group'] = pd.cut(df['age'], bins=[0, 20, 40, 60, 80], labels=['Young', 'Young-adult', 'Adult', 'Elderly'])
@@ -379,6 +320,13 @@ plt.title('Random Forest ROC Curve')
 plt.legend(loc='lower right')
 plt.grid()
 plt.show()
+
+#%%
+diabetes_data = pd.get_dummies(df, columns=['gender', 'smoking_history'], drop_first=True)
+
+print("Dataframe with one-hot encoding reapplied (diabetes_data):")
+print(diabetes_data.head())
+# %%
 
 
 ##################################################
