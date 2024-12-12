@@ -184,6 +184,140 @@ plt.show()
 #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
 
 
+
+#%%
+################
+## Smart Question 3 ##
+################
+
+# Features and target
+X = diabetes_data.drop(columns=['diabetes'])
+y = diabetes_data['diabetes']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Train a Random Forest model
+model = RandomForestClassifier(random_state=42, n_estimators=100)
+model.fit(X_train, y_train)
+
+# Predictions and evaluation
+y_pred_proba = model.predict_proba(X_test)[:, 1]
+y_pred = model.predict(X_test)
+
+print("Confusion Matrix:")
+print(confusion_matrix(y_test, y_pred))
+print("\nClassification Report:")
+print(classification_report(y_test, y_pred))
+print(f"\nAUC-ROC Score: {roc_auc_score(y_test, y_pred_proba):.2f}")
+
+# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
+PartialDependenceDisplay.from_estimator(
+    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
+)
+plt.show()
+
+# Statistical Summaries
+diabetes_yes = diabetes_data[diabetes_data['diabetes'] == 1]
+diabetes_no = diabetes_data[diabetes_data['diabetes'] == 0]
+
+bmi_yes_mean = diabetes_yes['bmi'].mean()
+bmi_no_mean = diabetes_no['bmi'].mean()
+hba1c_yes_mean = diabetes_yes['HbA1c_level'].mean()
+hba1c_no_mean = diabetes_no['HbA1c_level'].mean()
+
+print("Statistical Summary:")
+print(f"BMI Mean (Diabetes: Yes) = {bmi_yes_mean:.2f}")
+print(f"BMI Mean (Diabetes: No) = {bmi_no_mean:.2f}")
+print(f"HbA1c Mean (Diabetes: Yes) = {hba1c_yes_mean:.2f}")
+print(f"HbA1c Mean (Diabetes: No) = {hba1c_no_mean:.2f}")
+
+# Threshold Analysis
+avg_glucose_by_diabetes = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
+avg_bmi_by_diabetes = diabetes_data.groupby('diabetes')['bmi'].mean()
+
+threshold_glucose = avg_glucose_by_diabetes[1] * 0.9  # 90% of diabetic group mean
+threshold_bmi = avg_bmi_by_diabetes[1] * 0.9          # 90% of diabetic group mean
+
+print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
+print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
+
+# Visualizations
+plt.figure(figsize=(14, 6))
+
+# BMI Distribution
+plt.subplot(1, 2, 1)
+sns.kdeplot(diabetes_yes['bmi'], label='Diabetes: Yes', fill=True, color='red')
+sns.kdeplot(diabetes_no['bmi'], label='Diabetes: No', fill=True, color='blue')
+plt.title('BMI Distribution by Diabetes Status')
+plt.xlabel('BMI')
+plt.ylabel('Density')
+plt.legend()
+
+# HbA1c Level Distribution
+plt.subplot(1, 2, 2)
+sns.kdeplot(diabetes_yes['HbA1c_level'], label='Diabetes: Yes', fill=True, color='red')
+sns.kdeplot(diabetes_no['HbA1c_level'], label='Diabetes: No', fill=True, color='blue')
+plt.title('HbA1c Level Distribution by Diabetes Status')
+plt.xlabel('HbA1c Level')
+plt.ylabel('Density')
+plt.legend()
+
+plt.tight_layout()
+plt.show()
+
+
+# ##################################################
+# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
+# %%
+#%%
+################
+## Smart Question 4 ##
+################
+
+# Preprocessing: Handle missing values
+# diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+
+# Define features and target
+X = diabetes_data.drop(columns=['diabetes'])
+y = diabetes_data['diabetes']
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Train a Random Forest model
+model = RandomForestClassifier(random_state=42, n_estimators=100)
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict_proba(X_test)[:, 1]
+roc_auc = roc_auc_score(y_test, y_pred)
+print(f"ROC-AUC Score: {roc_auc:.4f}")
+
+# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
+PartialDependenceDisplay.from_estimator(
+    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
+)
+plt.show()
+
+# Threshold Analysis
+high_risk_glucose = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
+high_risk_bmi = diabetes_data.groupby('diabetes')['bmi'].mean()
+
+threshold_glucose = high_risk_glucose[1] * 0.9  # 90% of diabetic group mean
+threshold_bmi = high_risk_bmi[1] * 0.9          # 90% of diabetic group mean
+
+print(f"Average Blood Glucose Levels (Diabetes=1): {high_risk_glucose[1]:.2f}")
+print(f"Average BMI (Diabetes=1): {high_risk_bmi[1]:.2f}")
+print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
+print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
+
+
+# ##################################################
+# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
+
+
+
 #%%
 ################
 ## Smart Question 2 ##
@@ -453,140 +587,4 @@ print(diabetes_data.head())
 
 ##################################################
 #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-
 #%%
-################
-## Smart Question 3 ##
-################
-
-# Preprocessing: Handle missing values
-data['gender'] = data['gender'].map({'Male': 1, 'Female': 0})
-data['gender'].fillna(data['gender'].mode()[0], inplace=True)
-data['smoking_history'] = data['smoking_history'].astype('category').cat.codes
-
-# Features and target
-X = data.drop(columns=['diabetes'])
-y = data['diabetes']
-
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-# Train a Random Forest model
-model = RandomForestClassifier(random_state=42, n_estimators=100)
-model.fit(X_train, y_train)
-
-# Predictions and evaluation
-y_pred_proba = model.predict_proba(X_test)[:, 1]
-y_pred = model.predict(X_test)
-
-print("Confusion Matrix:")
-print(confusion_matrix(y_test, y_pred))
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred))
-print(f"\nAUC-ROC Score: {roc_auc_score(y_test, y_pred_proba):.2f}")
-
-# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
-PartialDependenceDisplay.from_estimator(
-    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
-)
-plt.show()
-
-# Statistical Summaries
-diabetes_yes = data[data['diabetes'] == 1]
-diabetes_no = data[data['diabetes'] == 0]
-
-bmi_yes_mean = diabetes_yes['bmi'].mean()
-bmi_no_mean = diabetes_no['bmi'].mean()
-hba1c_yes_mean = diabetes_yes['HbA1c_level'].mean()
-hba1c_no_mean = diabetes_no['HbA1c_level'].mean()
-
-print("Statistical Summary:")
-print(f"BMI Mean (Diabetes: Yes) = {bmi_yes_mean:.2f}")
-print(f"BMI Mean (Diabetes: No) = {bmi_no_mean:.2f}")
-print(f"HbA1c Mean (Diabetes: Yes) = {hba1c_yes_mean:.2f}")
-print(f"HbA1c Mean (Diabetes: No) = {hba1c_no_mean:.2f}")
-
-# Threshold Analysis
-avg_glucose_by_diabetes = data.groupby('diabetes')['blood_glucose_level'].mean()
-avg_bmi_by_diabetes = data.groupby('diabetes')['bmi'].mean()
-
-threshold_glucose = avg_glucose_by_diabetes[1] * 0.9  # 90% of diabetic group mean
-threshold_bmi = avg_bmi_by_diabetes[1] * 0.9          # 90% of diabetic group mean
-
-print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
-print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
-
-# Visualizations
-plt.figure(figsize=(14, 6))
-
-# BMI Distribution
-plt.subplot(1, 2, 1)
-sns.kdeplot(diabetes_yes['bmi'], label='Diabetes: Yes', fill=True, color='red')
-sns.kdeplot(diabetes_no['bmi'], label='Diabetes: No', fill=True, color='blue')
-plt.title('BMI Distribution by Diabetes Status')
-plt.xlabel('BMI')
-plt.ylabel('Density')
-plt.legend()
-
-# HbA1c Level Distribution
-plt.subplot(1, 2, 2)
-sns.kdeplot(diabetes_yes['HbA1c_level'], label='Diabetes: Yes', fill=True, color='red')
-sns.kdeplot(diabetes_no['HbA1c_level'], label='Diabetes: No', fill=True, color='blue')
-plt.title('HbA1c Level Distribution by Diabetes Status')
-plt.xlabel('HbA1c Level')
-plt.ylabel('Density')
-plt.legend()
-
-plt.tight_layout()
-plt.show()
-
-
-# ##################################################
-# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-# %%
-#%%
-################
-## Smart Question 4 ##
-################
-
-# Preprocessing: Handle missing values
-# diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
-
-# Define features and target
-X = diabetes_data.drop(columns=['diabetes'])
-y = diabetes_data['diabetes']
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-# Train a Random Forest model
-model = RandomForestClassifier(random_state=42, n_estimators=100)
-model.fit(X_train, y_train)
-
-# Evaluate the model
-y_pred = model.predict_proba(X_test)[:, 1]
-roc_auc = roc_auc_score(y_test, y_pred)
-print(f"ROC-AUC Score: {roc_auc:.4f}")
-
-# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
-PartialDependenceDisplay.from_estimator(
-    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
-)
-plt.show()
-
-# Threshold Analysis
-high_risk_glucose = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
-high_risk_bmi = diabetes_data.groupby('diabetes')['bmi'].mean()
-
-threshold_glucose = high_risk_glucose[1] * 0.9  # 90% of diabetic group mean
-threshold_bmi = high_risk_bmi[1] * 0.9          # 90% of diabetic group mean
-
-print(f"Average Blood Glucose Levels (Diabetes=1): {high_risk_glucose[1]:.2f}")
-print(f"Average BMI (Diabetes=1): {high_risk_bmi[1]:.2f}")
-print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
-print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
-
-
-# ##################################################
-# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-# %%
