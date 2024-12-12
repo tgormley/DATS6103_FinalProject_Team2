@@ -543,12 +543,22 @@ plt.show()
 ## Smart Question 4 ##
 ################
 
-# Preprocessing: Handle missing values
-diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+# Handle 'smoking_history' by encoding it to numeric values
+if 'smoking_history' in diabetes_data.columns:
+    diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+
+# Ensure all features are numeric
+print("Data types after preprocessing:")
+print(diabetes_data.dtypes)
 
 # Define features and target
 X = diabetes_data.drop(columns=['diabetes'])
 y = diabetes_data['diabetes']
+
+# Check for any remaining non-numeric data in X
+if not np.issubdtype(X.values.dtype, np.number):
+    print("Error: Non-numeric data found in features.")
+    print(X.head())
 
 # Split the data
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
@@ -579,7 +589,6 @@ print(f"Average Blood Glucose Levels (Diabetes=1): {high_risk_glucose[1]:.2f}")
 print(f"Average BMI (Diabetes=1): {high_risk_bmi[1]:.2f}")
 print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
 print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
-
 
 # ##################################################
 # #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
