@@ -50,10 +50,7 @@ print(diabetes_data.head())
 print(diabetes_data.isnull().sum())
 print(diabetes_data.describe())
 
-# Preprocessing: Handle missing values
-diabetes_data['gender'] = diabetes_data['gender'].map({'Male': 1, 'Female': 0})
-diabetes_data['gender'].fillna(diabetes_data['gender'].mode()[0], inplace=True)
-diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+
 
 
 # One-hot encoding for categorical variables
@@ -463,39 +460,6 @@ print(diabetes_data.head())
 ################
 ## Smart Question 3 ##
 ################
-# Define features and target
-features = diabetes_data.drop(columns=['diabetes'])
-target = diabetes_data['diabetes']
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42, stratify=target)
-
-# Train a Random Forest model
-rf_model = RandomForestClassifier(random_state=42, n_estimators=100)
-rf_model.fit(X_train, y_train)
-
-# Evaluate the model
-rf_probs = rf_model.predict_proba(X_test)[:, 1]
-roc_auc = roc_auc_score(y_test, rf_probs)
-print(f"ROC-AUC Score: {roc_auc:.4f}")
-
-# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
-PartialDependenceDisplay.from_estimator(
-    rf_model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
-)
-plt.show()
-
-# Threshold Analysis
-avg_glucose_by_diabetes = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
-avg_bmi_by_diabetes = diabetes_data.groupby('diabetes')['bmi'].mean()
-
-threshold_glucose = avg_glucose_by_diabetes[1] * 0.9  # 90% of diabetic group mean
-threshold_bmi = avg_bmi_by_diabetes[1] * 0.9          # 90% of diabetic group mean
-
-print(f"Average Blood Glucose Levels (Diabetes=1): {avg_glucose_by_diabetes[1]:.2f}")
-print(f"Average BMI (Diabetes=1): {avg_bmi_by_diabetes[1]:.2f}")
-print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
-print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
 
 
 # ##################################################
