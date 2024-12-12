@@ -464,21 +464,6 @@ print(diabetes_data.head())
 ## Smart Question 3 ##
 ################
 
-
-# ##################################################
-# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-
-# #%%
-# ################
-# ## Smart Question 4 ##
-# ################
-
-
-# Preprocessing: Handle missing values
-data['gender'] = data['gender'].map({'Male': 1, 'Female': 0})
-data['gender'].fillna(data['gender'].mode()[0], inplace=True)
-data['smoking_history'] = data['smoking_history'].astype('category').cat.codes
-
 # Features and target
 X = data.drop(columns=['diabetes'])
 y = data['diabetes']
@@ -554,6 +539,16 @@ plt.legend()
 
 plt.tight_layout()
 plt.show()
+
+
+# ##################################################
+# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
+
+# #%%
+# ################
+# ## Smart Question 4 ##
+# ################
+
 
 
 # ##################################################
