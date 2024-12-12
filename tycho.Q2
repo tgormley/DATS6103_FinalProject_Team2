@@ -245,6 +245,33 @@ print(importance_df)
 
 
 
+#%%
+# Create glucose categories
+df['glucose_category'] = pd.cut(df['blood_glucose_level'], bins=[0, 100, 140, 300], labels=['Low', 'Normal', 'High'])
+
+# Group by smoking history and glucose category
+smoking_glucose_prevalence = df.groupby(['smoking_history', 'glucose_category'])['diabetes'].mean().unstack()
+
+# Heatmap of diabetes prevalence
+plt.figure(figsize=(10, 6))
+sns.heatmap(smoking_glucose_prevalence, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Diabetes Prevalence by Smoking History and Glucose Level')
+plt.ylabel('Smoking History')
+plt.xlabel('Glucose Category')
+plt.show()
+
+
+#%%
+# Boxplot of age distribution by smoking history
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=df, x='smoking_history', y='age', palette='viridis')
+plt.title('Age Distribution by Smoking History')
+plt.xlabel('Smoking History')
+plt.ylabel('Age')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
 
 
 
@@ -259,53 +286,46 @@ print(importance_df)
 
 
 #%%
-# Separate classes
+# Balance the dataset (oversampling the minority class)
 minority_class = df[df['diabetes'] == 1]
 majority_class = df[df['diabetes'] == 0]
 
-# Oversample the minority class
 oversampled_minority = minority_class.sample(len(majority_class), replace=True, random_state=42)
-
-# Combine majority and oversampled minority
 balanced_df = pd.concat([majority_class, oversampled_minority])
-
-# Shuffle the data
 balanced_df = balanced_df.sample(frac=1, random_state=42).reset_index(drop=True)
 
-# Split features and target
-X_balanced = balanced_df[['smoking_history_encoded', 'high_glucose']]
+# Features and target
+X_balanced = balanced_df[['smoking_history_encoded', 'high_glucose', 'age']]
 y_balanced = balanced_df['diabetes']
 
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_balanced, y_balanced, test_size=0.3, random_state=42)
 
 
 #%%
-# Split the balanced dataset into training and test sets
-X_train, X_test, y_train, y_test = train_test_split(X_balanced, y_balanced, test_size=0.3, random_state=42)
-# Train logistic regression
-log_reg = LogisticRegression(max_iter=1000, random_state=42)
+# Logistic regression with balanced dataset
+log_reg = LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced')
 log_reg.fit(X_train, y_train)
 
 # Evaluate logistic regression
 log_preds = log_reg.predict(X_test)
 log_probs = log_reg.predict_proba(X_test)[:, 1]
 
-print("Logistic Regression Report:")
+print("Logistic Regression Report (with Age):")
 print(classification_report(y_test, log_preds))
-print("ROC AUC Score:", roc_auc_score(y_test, log_probs))
+print("ROC AUC Score (with Age):", roc_auc_score(y_test, log_probs))
 
-# Coefficients to analyze the effect of features
+# Coefficients
 coefficients = pd.DataFrame({
-    'Feature': ['Smoking History', 'High Blood Glucose'],
+    'Feature': ['Smoking History', 'High Blood Glucose', 'Age'],
     'Coefficient': log_reg.coef_[0]
 })
 print("Logistic Regression Coefficients:")
 print(coefficients)
 
-
 #%%
-
-# Train random forest
-rf = RandomForestClassifier(random_state=42)
+# Random Forest with balanced dataset
+rf = RandomForestClassifier(random_state=42, class_weight='balanced', n_estimators=100, max_depth=7)
 rf.fit(X_train, y_train)
 
 # Evaluate random forest
@@ -316,12 +336,69 @@ print("Random Forest Report:")
 print(classification_report(y_test, rf_preds))
 print("ROC AUC Score:", roc_auc_score(y_test, rf_probs))
 
-# Feature importance to analyze the effect of features
-importances = rf.feature_importances_
-importance_df = pd.DataFrame({
-    'Feature': ['Smoking History', 'High Blood Glucose'],
-    'Importance': importances
+# Feature Importance
+importance = pd.DataFrame({
+    'Feature': ['Smoking History', 'High Blood Glucose', 'Age'],
+    'Importance': rf.feature_importances_
 }).sort_values(by='Importance', ascending=False)
 print("Random Forest Feature Importance:")
-print(importance_df)
+print(importance)
 
+
+
+
+#%%
+from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+# Get probabilities from the random forest model
+rf_probs = rf.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve and AUC score
+fpr, tpr, thresholds = roc_curve(y_test, rf_probs)
+roc_auc = roc_auc_score(y_test, rf_probs)
+
+# Plot the ROC curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')  # Diagonal line (random classifier)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Random Forest ROC Curve')
+plt.legend(loc='lower right')
+plt.grid()
+plt.show()
+
+#%%
+
+#%%
+
+# %%
+from scipy.stats import ttest_ind
+
+# Separate groups
+group_0 = df[df['diabetes'] == 0]
+group_1 = df[df['diabetes'] == 1]
+
+# T-test for blood glucose level
+t_stat_glucose, p_value_glucose = ttest_ind(group_0['blood_glucose_level'], group_1['blood_glucose_level'], equal_var=False)
+
+# T-test for age
+t_stat_age, p_value_age = ttest_ind(group_0['age'], group_1['age'], equal_var=False)
+
+# Print results
+print("T-Test Results:")
+print(f"Blood Glucose Level: t-statistic = {t_stat_glucose:.3f}, p-value = {p_value_glucose:.3e}")
+print(f"Age: t-statistic = {t_stat_age:.3f}, p-value = {p_value_age:.3e}")
+# %%
+from scipy.stats import f_oneway
+
+# Group blood glucose levels by smoking history
+grouped_glucose = [df[df['smoking_history'] == group]['blood_glucose_level'] for group in df['smoking_history'].unique()]
+
+# Perform ANOVA
+f_stat, p_value = f_oneway(*grouped_glucose)
+
+# Print results
+print(f"ANOVA Test Results for Blood Glucose by Smoking History:")
+print(f"F-statistic: {f_stat:.3f}, p-value: {p_value:.3e}")
+# %%
