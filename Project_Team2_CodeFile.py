@@ -66,6 +66,319 @@ print(diabetes_data.head())
 ################
 ## Smart Question 2 ##
 ################
+#%%
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+#to scale data using z-score
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import LabelEncoder
+from sklearn.model_selection import train_test_split
+
+#algorithms to use
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.ensemble import RandomForestClassifier
+
+#Metrics for evaluating models
+from sklearn.metrics import confusion_matrix, classification_report, precision_recall_curve, roc_auc_score
+
+#for tuning models
+from sklearn.model_selection import GridSearchCV
+
+#to ignore warnings
+import warnings
+warnings.filterwarnings("ignore")
+
+import sys
+!{sys.executable} -m pip install openpyxl
+
+"""### Read the dataset"""
+
+#reading the dataset
+df = pd.read_csv('diabetes_prediction_dataset.csv')
+
+df.head()
+
+"""### Printing the information"""
+
+df.info()
+
+"""**Observations:**
+- There are 100000 observations and 9 columns.
+- All the columns have 100000 non-null values i.e. there are no missing values in the data.
+"""
+
+print(df.columns)
+
+"""**Let's check the unique values in each column**"""
+
+#checking unique values in each column
+unique_counts = df.nunique()
+print(unique_counts)
+
+"""**Observations:**
+- No columns have only 1 unique value in them, so no need to drop any columns.
+- On the basis of number of unique values in each column and the data description, we can identify the continuous and categorical columns in the data.
+
+Let's define lists for numerical and categorical columns to apply explore them separately.
+"""
+
+# Change binary 0 and 1 data to categorical 'no' and 'yes'
+df['hypertension'] = df['hypertension'].replace({0:'no', 1:'yes'})
+df['heart_disease'] = df['heart_disease'].replace({0:'no', 1:'yes'})
+df['diabetes'] = df['diabetes'].replace({0:'no', 1:'yes'})
+
+
+#Creating numerical columns
+num_cols=['age','bmi','HbA1c_level','blood_glucose_level']
+
+#Creating categorical variables
+cat_cols= ['gender','hypertension','heart_disease','smoking_history','diabetes']
+
+"""### Let's start with univariate analysis of numerical columns"""
+
+#Checking summary statistics
+df[num_cols].describe().T
+
+#%%
+df['diabetes'] = df['diabetes'].replace({'no': 0, 'yes': 1}).astype(int)
+
+#%%
+# Count occurrences of each unique value in the column
+value_counts = df['gender'].value_counts()
+
+# Print the counts
+print("Counts of each category in the gender column:")
+print(value_counts)
+
+
+#%%
+# Calculate diabetes prevalence by gender
+gender_diabetes_prevalence = df.groupby('gender')['diabetes'].value_counts(normalize=True).unstack()
+
+# Plot the data directly
+gender_diabetes_prevalence.plot(kind='bar', stacked=True, figsize=(8, 6), color=['blue', 'orange'])
+plt.title('Diabetes Prevalence by Gender')
+plt.ylabel('Proportion')
+plt.xlabel('Gender')
+plt.legend(['No Diabetes', 'Diabetes'], title='Diabetes Status')
+plt.tight_layout()
+plt.show()
+
+
+
+#%%
+df['age_group'] = pd.cut(df['age'], bins=[0, 20, 40, 60, 80], labels=['Young', 'Young-adult', 'Adult', 'Elderly'])
+
+# Group by age group and calculate diabetes prevalence
+age_group_prevalence = df.groupby('age_group')['diabetes'].mean()
+print("Diabetes prevalence by age group:\n", age_group_prevalence)
+
+# Visualize the prevalence
+sns.barplot(x=age_group_prevalence.index, y=age_group_prevalence.values)
+plt.title('Diabetes Prevalence by Age Group')
+plt.ylabel('Prevalence')
+plt.show()
+
+
+
+#%%
+# Inspect unique values in the smoking_history column
+print("Unique Smoking History Categories:")
+print(df['smoking_history'].unique())
+
+# Calculate diabetes prevalence by smoking history
+smoking_prevalence = df.groupby('smoking_history')['diabetes'].mean()
+
+# Plot the data
+plt.figure(figsize=(10, 6))
+sns.barplot(x=smoking_prevalence.index, y=smoking_prevalence.values, palette='viridis')
+plt.title('Diabetes Prevalence by Smoking History')
+plt.ylabel('Diabetes Prevalence')
+plt.xlabel('Smoking History')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+
+#%%
+# Encode smoking_history using label encoding
+le = LabelEncoder()
+df['smoking_history_encoded'] = le.fit_transform(df['smoking_history'])
+
+# Create a binary indicator for high blood glucose levels
+df['high_glucose'] = (df['blood_glucose_level'] > 140).astype(int)
+
+# Select features and target
+X = df[['smoking_history_encoded', 'high_glucose']]
+y = df['diabetes']
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+#%%
+# Train logistic regression
+log_reg = LogisticRegression(max_iter=1000, random_state=42)
+log_reg.fit(X_train, y_train)
+
+# Evaluate logistic regression
+log_preds = log_reg.predict(X_test)
+log_probs = log_reg.predict_proba(X_test)[:, 1]
+print("Logistic Regression Report:")
+print(classification_report(y_test, log_preds))
+print("ROC AUC Score:", roc_auc_score(y_test, log_probs))
+
+# Display coefficients
+coefficients = pd.DataFrame({
+    'Feature': ['Smoking History', 'High Blood Glucose'],
+    'Coefficient': log_reg.coef_[0]
+})
+print("Logistic Regression Coefficients:")
+print(coefficients)
+
+
+
+#%%
+# Train random forest
+rf = RandomForestClassifier(random_state=42)
+rf.fit(X_train, y_train)
+
+# Evaluate random forest
+rf_preds = rf.predict(X_test)
+rf_probs = rf.predict_proba(X_test)[:, 1]
+print("Random Forest Report:")
+print(classification_report(y_test, rf_preds))
+print("ROC AUC Score:", roc_auc_score(y_test, rf_probs))
+
+# Feature importance
+importances = rf.feature_importances_
+importance_df = pd.DataFrame({
+    'Feature': ['Smoking History', 'High Blood Glucose'],
+    'Importance': importances
+}).sort_values(by='Importance', ascending=False)
+print("Random Forest Feature Importance:")
+print(importance_df)
+
+
+
+#%%
+# Create glucose categories
+df['glucose_category'] = pd.cut(df['blood_glucose_level'], bins=[0, 100, 140, 300], labels=['Low', 'Normal', 'High'])
+
+# Group by smoking history and glucose category
+smoking_glucose_prevalence = df.groupby(['smoking_history', 'glucose_category'])['diabetes'].mean().unstack()
+
+# Heatmap of diabetes prevalence
+plt.figure(figsize=(10, 6))
+sns.heatmap(smoking_glucose_prevalence, annot=True, cmap='coolwarm', fmt='.2f')
+plt.title('Diabetes Prevalence by Smoking History and Glucose Level')
+plt.ylabel('Smoking History')
+plt.xlabel('Glucose Category')
+plt.show()
+
+
+#%%
+# Boxplot of age distribution by smoking history
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=df, x='smoking_history', y='age', palette='viridis')
+plt.title('Age Distribution by Smoking History')
+plt.xlabel('Smoking History')
+plt.ylabel('Age')
+plt.xticks(rotation=45)
+plt.tight_layout()
+plt.show()
+
+
+
+
+#%%
+# Balance the dataset (oversampling the minority class)
+minority_class = df[df['diabetes'] == 1]
+majority_class = df[df['diabetes'] == 0]
+
+oversampled_minority = minority_class.sample(len(majority_class), replace=True, random_state=42)
+balanced_df = pd.concat([majority_class, oversampled_minority])
+balanced_df = balanced_df.sample(frac=1, random_state=42).reset_index(drop=True)
+
+# Features and target
+X_balanced = balanced_df[['smoking_history_encoded', 'high_glucose', 'age']]
+y_balanced = balanced_df['diabetes']
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X_balanced, y_balanced, test_size=0.3, random_state=42)
+
+
+#%%
+# Logistic regression with balanced dataset
+log_reg = LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced')
+log_reg.fit(X_train, y_train)
+
+# Evaluate logistic regression
+log_preds = log_reg.predict(X_test)
+log_probs = log_reg.predict_proba(X_test)[:, 1]
+
+print("Logistic Regression Report (with Age):")
+print(classification_report(y_test, log_preds))
+print("ROC AUC Score (with Age):", roc_auc_score(y_test, log_probs))
+
+# Coefficients
+coefficients = pd.DataFrame({
+    'Feature': ['Smoking History', 'High Blood Glucose', 'Age'],
+    'Coefficient': log_reg.coef_[0]
+})
+print("Logistic Regression Coefficients:")
+print(coefficients)
+
+#%%
+# Random Forest with balanced dataset
+rf = RandomForestClassifier(random_state=42, class_weight='balanced', n_estimators=100, max_depth=7)
+rf.fit(X_train, y_train)
+
+# Evaluate random forest
+rf_preds = rf.predict(X_test)
+rf_probs = rf.predict_proba(X_test)[:, 1]
+
+print("Random Forest Report:")
+print(classification_report(y_test, rf_preds))
+print("ROC AUC Score:", roc_auc_score(y_test, rf_probs))
+
+# Feature Importance
+importance = pd.DataFrame({
+    'Feature': ['Smoking History', 'High Blood Glucose', 'Age'],
+    'Importance': rf.feature_importances_
+}).sort_values(by='Importance', ascending=False)
+print("Random Forest Feature Importance:")
+print(importance)
+
+
+
+
+#%%
+from sklearn.metrics import roc_curve, roc_auc_score
+import matplotlib.pyplot as plt
+# Get probabilities from the random forest model
+rf_probs = rf.predict_proba(X_test)[:, 1]
+
+# Compute ROC curve and AUC score
+fpr, tpr, thresholds = roc_curve(y_test, rf_probs)
+roc_auc = roc_auc_score(y_test, rf_probs)
+
+# Plot the ROC curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', linestyle='--')  # Diagonal line (random classifier)
+plt.xlabel('False Positive Rate')
+plt.ylabel('True Positive Rate')
+plt.title('Random Forest ROC Curve')
+plt.legend(loc='lower right')
+plt.grid()
+plt.show()
 
 
 ##################################################
