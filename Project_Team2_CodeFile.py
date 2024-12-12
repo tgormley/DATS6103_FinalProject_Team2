@@ -51,6 +51,10 @@ print(diabetes_data.head())
 print(diabetes_data.isnull().sum())
 print(diabetes_data.describe())
 
+# Preprocessing: Handle missing values
+diabetes_data['gender'] = diabetes_data['gender'].map({'Male': 1, 'Female': 0})
+diabetes_data['gender'].fillna(diabetes_data['gender'].mode()[0], inplace=True)
+
 # One-hot encoding for categorical variables
 diabetes_data = pd.get_dummies(diabetes_data, columns=['smoking_history'], drop_first=True)
 
@@ -541,8 +545,6 @@ plt.show()
 ################
 
 # Preprocessing: Handle missing values
-diabetes_data['gender'] = diabetes_data['gender'].map({'Male': 1, 'Female': 0})
-diabetes_data['gender'].fillna(diabetes_data['gender'].mode()[0], inplace=True)
 diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
 
 # Define features and target
