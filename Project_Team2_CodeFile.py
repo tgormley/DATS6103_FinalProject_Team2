@@ -532,11 +532,7 @@ plt.legend(loc='lower right')
 plt.grid()
 plt.show()
 
-#%%
-diabetes_data = pd.get_dummies(df, columns=['gender', 'smoking_history'], drop_first=True)
 
-print("Dataframe with one-hot encoding reapplied (diabetes_data):")
-print(diabetes_data.head())
 # %%
 
 
@@ -587,5 +583,4 @@ print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
 
 # ##################################################
 # #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-
-
+#%%
