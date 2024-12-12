@@ -20,6 +20,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import LabelEncoder
 from sklearn.inspection import PartialDependenceDisplay
+from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report
 
 
 
@@ -457,14 +458,6 @@ print(diabetes_data.head())
 ################
 ## Smart Question 3 ##
 ################
-
-# ##################################################
-# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-
-# #%%
-# ################
-# ## Smart Question 4 ##
-# ################
 
 
 
