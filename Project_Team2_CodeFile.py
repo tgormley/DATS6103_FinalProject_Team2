@@ -18,6 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from imblearn.over_sampling import SMOTE
+from sklearn.preprocessing import LabelEncoder
 
 
 ##################################################
@@ -338,6 +339,7 @@ print(diabetes_data.head())
 ################
 
 # Compute the correlation matrix
+diabetes_data.head()
 correlation_matrix = diabetes_data.corr()
 
 # Plot the heatmap
