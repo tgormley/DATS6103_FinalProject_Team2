@@ -61,6 +61,7 @@ diabetes_data = pd.get_dummies(diabetes_data, columns=['smoking_history'], drop_
 print(diabetes_data.head())
 
 
+
 #%%
 ################
 ## Smart Question 1 ##
@@ -272,11 +273,7 @@ plt.show()
 # %%
 #%%
 ################
-
 #%%
-################
-## Smart Question 2 ##
-################
 def reverse_one_hot(df):
     # Reverse 'gender' one-hot encoding
     if 'gender_Male' in df.columns:
@@ -291,10 +288,64 @@ def reverse_one_hot(df):
     
     return df
 
-#%%
+
+
 # Reverse one-hot encoding and assign to 'df'
 df = reverse_one_hot(diabetes_data)
 print(df.head())
+
+#%%
+
+## Smart Question 4 ##
+################
+
+# Preprocessing: Handle missing values
+df['smoking_history'] = df['smoking_history'].astype('category').cat.codes
+
+# Define features and target
+X = df.drop(columns=['diabetes'])
+y = df['diabetes']
+
+# Split the data
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
+
+# Train a Random Forest model
+model = RandomForestClassifier(random_state=42, n_estimators=100)
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict_proba(X_test)[:, 1]
+roc_auc = roc_auc_score(y_test, y_pred)
+print(f"ROC-AUC Score: {roc_auc:.4f}")
+
+# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
+PartialDependenceDisplay.from_estimator(
+    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
+)
+plt.show()
+
+# Threshold Analysis
+high_risk_glucose = df.groupby('diabetes')['blood_glucose_level'].mean()
+high_risk_bmi = df.groupby('diabetes')['bmi'].mean()
+
+threshold_glucose = high_risk_glucose[1] * 0.9  # 90% of diabetic group mean
+threshold_bmi = high_risk_bmi[1] * 0.9          # 90% of diabetic group mean
+
+print(f"Average Blood Glucose Levels (Diabetes=1): {high_risk_glucose[1]:.2f}")
+print(f"Average BMI (Diabetes=1): {high_risk_bmi[1]:.2f}")
+print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
+print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
+
+
+# ##################################################
+# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
+#%%
+################
+## Smart Question 2 ##
+################
+
+
+
 
 #%%
 # Change binary 0 and 1 data to categorical 'no' and 'yes'
@@ -538,58 +589,3 @@ plt.show()
 
 ##################################################
 #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-#%%
-
-## Smart Question 4 ##
-################
-
-# Handle 'smoking_history' by encoding it to numeric values
-if 'smoking_history' in diabetes_data.columns:
-    diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
-
-# Ensure all features are numeric
-print("Data types after preprocessing:")
-print(diabetes_data.dtypes)
-
-# Define features and target
-X = diabetes_data.drop(columns=['diabetes'])
-y = diabetes_data['diabetes']
-
-# Check for any remaining non-numeric data in X
-if not np.issubdtype(X.values.dtype, np.number):
-    print("Error: Non-numeric data found in features.")
-    print(X.head())
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
-
-# Train a Random Forest model
-model = RandomForestClassifier(random_state=42, n_estimators=100)
-model.fit(X_train, y_train)
-
-# Evaluate the model
-y_pred = model.predict_proba(X_test)[:, 1]
-roc_auc = roc_auc_score(y_test, y_pred)
-print(f"ROC-AUC Score: {roc_auc:.4f}")
-
-# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
-PartialDependenceDisplay.from_estimator(
-    model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
-)
-plt.show()
-
-# Threshold Analysis
-high_risk_glucose = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
-high_risk_bmi = diabetes_data.groupby('diabetes')['bmi'].mean()
-
-threshold_glucose = high_risk_glucose[1] * 0.9  # 90% of diabetic group mean
-threshold_bmi = high_risk_bmi[1] * 0.9          # 90% of diabetic group mean
-
-print(f"Average Blood Glucose Levels (Diabetes=1): {high_risk_glucose[1]:.2f}")
-print(f"Average BMI (Diabetes=1): {high_risk_bmi[1]:.2f}")
-print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
-print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
-
-# ##################################################
-# #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
-#%%
