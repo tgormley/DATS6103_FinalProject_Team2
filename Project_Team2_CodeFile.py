@@ -20,6 +20,7 @@ from sklearn.metrics import roc_curve, roc_auc_score
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import LabelEncoder
 from sklearn.inspection import PartialDependenceDisplay
+from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report
 
 
 
@@ -50,6 +51,10 @@ print(diabetes_data.head())
 print(diabetes_data.isnull().sum())
 print(diabetes_data.describe())
 
+# Preprocessing: Handle missing values
+data['gender'] = data['gender'].map({'Male': 1, 'Female': 0})
+data['gender'].fillna(data['gender'].mode()[0], inplace=True)
+data['smoking_history'] = data['smoking_history'].astype('category').cat.codes
 
 # One-hot encoding for categorical variables
 diabetes_data = pd.get_dummies(diabetes_data, columns=['gender', 'smoking_history'], drop_first=True)
@@ -467,16 +472,7 @@ print(diabetes_data.head())
 # ################
 # ## Smart Question 4 ##
 # ################
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score, confusion_matrix, classification_report
-from sklearn.inspection import PartialDependenceDisplay
-import matplotlib.pyplot as plt
 
-# Load dataset
-data = pd.read_csv('diabetes_prediction_dataset.csv')
 
 # Preprocessing: Handle missing values
 data['gender'] = data['gender'].map({'Male': 1, 'Female': 0})
