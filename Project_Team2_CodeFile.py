@@ -101,7 +101,7 @@ plt.barh(vif_data['Feature'], vif_data['VIF'], color='royalblue')
 plt.xlabel('Variance Inflation Factor (VIF)')
 plt.ylabel('Feature')
 plt.title('VIF Values for Features')
-plt.gca().invert_yaxis()  # Invert y-axis for better readability
+plt.gca().invert_yaxis() 
 plt.show()
 
 
