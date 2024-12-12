@@ -19,6 +19,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score
 from sklearn.metrics import roc_curve, roc_auc_score
 from imblearn.over_sampling import SMOTE
 from sklearn.preprocessing import LabelEncoder
+from sklearn.inspection import PartialDependenceDisplay
+
 
 
 ##################################################
@@ -463,16 +465,7 @@ print(diabetes_data.head())
 # ################
 # ## Smart Question 4 ##
 # ################
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import roc_auc_score
-from sklearn.inspection import PartialDependenceDisplay
-import matplotlib.pyplot as plt
 
-# Load dataset
-diabetes_data = pd.read_csv('diabetes_prediction_dataset.csv')
 
 # Preprocessing: Handle missing values
 diabetes_data['gender'] = diabetes_data['gender'].map({'Male': 1, 'Female': 0})
