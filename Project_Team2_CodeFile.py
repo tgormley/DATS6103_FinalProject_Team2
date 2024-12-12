@@ -545,7 +545,7 @@ plt.show()
 ################
 
 # Preprocessing: Handle missing values
-diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
+# diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
 
 # Define features and target
 X = diabetes_data.drop(columns=['diabetes'])
