@@ -53,11 +53,9 @@ print(diabetes_data.describe())
 # Preprocessing: Handle missing values
 diabetes_data['gender'] = diabetes_data['gender'].map({'Male': 1, 'Female': 0})
 diabetes_data['gender'].fillna(diabetes_data['gender'].mode()[0], inplace=True)
-diabetes_data['smoking_history'] = diabetes_data['smoking_history'].astype('category').cat.codes
-
 
 # One-hot encoding for categorical variables
-diabetes_data = pd.get_dummies(diabetes_data, columns=['gender', 'smoking_history'], drop_first=True)
+diabetes_data = pd.get_dummies(diabetes_data, columns=['smoking_history'], drop_first=True)
 
 print(diabetes_data.head())
 
@@ -66,7 +64,6 @@ print(diabetes_data.head())
 ################
 ## Smart Question 1 ##
 ################
-
 
 # Compute the correlation matrix
 diabetes_data.head()
@@ -79,7 +76,7 @@ plt.title("Correlation Matrix")
 plt.show()
 
 # Define features and target
-features = ['age', 'bmi', 'hypertension', 'heart_disease', 'HbA1c_level', 'blood_glucose_level','gender_Male','gender_Other','smoking_history_current','smoking_history_ever','smoking_history_former','smoking_history_never','smoking_history_not current']
+features = ['age', 'bmi', 'hypertension', 'heart_disease', 'HbA1c_level', 'blood_glucose_level','gender','smoking_history_current','smoking_history_ever','smoking_history_former','smoking_history_never','smoking_history_not current']
 target = 'diabetes'
 
 X = diabetes_data[features]
@@ -119,46 +116,27 @@ rf.fit(X_train, y_train)
 # Predict on the test set
 y_pred_rf = rf.predict(X_test)
 
-# Evaluate the model
-print("Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
-print("Classification Report:\n", classification_report(y_test, y_pred_rf))
 
 # Feature importance
 importances = rf.feature_importances_
 feature_importances = pd.DataFrame({'Feature': features, 'Importance': importances})
 print(feature_importances.sort_values(by='Importance', ascending=False))
 
-# rf_features = {
-#     'Feature': ['HbA1c_level', 'blood_glucose_level', 'bmi', 'age', 'hypertension', 'heart_disease'],
-#     'Importance': [0.407410, 0.327367, 0.144707, 0.101647, 0.011596, 0.007273]
-# }
-# rf_df = pd.DataFrame(rf_features)
+sorted_importances = feature_importances.sort_values(by='Importance', ascending=False)
 
-# plt.figure(figsize=(8, 6))
-# sns.barplot(x='Importance', y='Feature', data=rf_df.sort_values(by='Importance', ascending=False), palette="viridis")
-# plt.title("Feature Importance (Random Forest)")
-# plt.xlabel("Importance Score")
-# plt.ylabel("Feature")
-# plt.show()
+plt.figure(figsize=(10, 6))
+plt.barh(sorted_importances['Feature'], sorted_importances['Importance'], color='skyblue')
+plt.xlabel('Importance')
+plt.ylabel('Feature')
+plt.title('Feature Importance (Random Forest)')
+plt.gca().invert_yaxis()  # Invert y-axis for better readability
+plt.grid(axis='x')
+plt.show()
 
-
-# print(classification_report(y_test, y_pred_rf))
-# y_proba = rf.predict_proba(X_test)[:, 1]
-# auc = roc_auc_score(y_test, y_proba)
-# print("ROC-AUC:", auc)
-
-# fpr, tpr, thresholds = roc_curve(y_test, y_proba)
-# plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc:.2f})")
-# plt.xlabel("False Positive Rate")
-# plt.ylabel("True Positive Rate")
-# plt.title("ROC Curve")
-# plt.legend()
-# plt.show()
-
-## Improving model with smote
+## training random forest model with smote for diabetes prediction
 
 # Defining features and target
-features = ['age', 'bmi', 'hypertension', 'heart_disease', 'HbA1c_level', 'blood_glucose_level','gender_Male','smoking_history_former','smoking_history_never',]
+features = ['age', 'bmi', 'hypertension', 'heart_disease', 'HbA1c_level', 'blood_glucose_level','gender','smoking_history_former','smoking_history_never',]
 target = 'diabetes'
 
 X = diabetes_data[features]
@@ -179,11 +157,27 @@ rf_smote.fit(X_train_smote, y_train_smote)
 y_pred_smote = rf_smote.predict(X_test)
 
 # Evaluate the model
-accuracy_smote = accuracy_score(y_test, y_pred_smote)
-print("Random Forest Accuracy after SMOTE:", accuracy_smote)
 
 classification_report_smote = classification_report(y_test, y_pred_smote)
-print("\nClassification Report after SMOTE:\n", classification_report_smote)
+print("\nClassification Report with SMOTE:\n", classification_report_smote)
+accuracy_smote = accuracy_score(y_test, y_pred_smote)
+print("Random Forest Accuracy with SMOTE:", accuracy_smote)
+precision_smote = precision_score(y_test, y_pred_smote)
+print(f"Precision with SMOTE: {precision_smote:.2f}")
+recall_smote = recall_score(y_test, y_pred_smote)
+print(f"Recall with SMOTE: {recall_smote:.2f}")
+
+y_proba = rf_smote.predict_proba(X_test)[:, 1]
+auc = roc_auc_score(y_test, y_proba)
+print("ROC-AUC:", auc)
+
+fpr, tpr, thresholds = roc_curve(y_test, y_proba)
+plt.plot(fpr, tpr, label=f"ROC Curve (AUC = {auc:.2f})")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend()
+plt.show()
 
 ##################################################
 #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
@@ -463,40 +457,6 @@ print(diabetes_data.head())
 ################
 ## Smart Question 3 ##
 ################
-# Define features and target
-features = diabetes_data.drop(columns=['diabetes'])
-target = diabetes_data['diabetes']
-
-# Split the data
-X_train, X_test, y_train, y_test = train_test_split(features, target, test_size=0.2, random_state=42, stratify=target)
-
-# Train a Random Forest model
-rf_model = RandomForestClassifier(random_state=42, n_estimators=100)
-rf_model.fit(X_train, y_train)
-
-# Evaluate the model
-rf_probs = rf_model.predict_proba(X_test)[:, 1]
-roc_auc = roc_auc_score(y_test, rf_probs)
-print(f"ROC-AUC Score: {roc_auc:.4f}")
-
-# Partial Dependence Plots for 'bmi' and 'blood_glucose_level'
-PartialDependenceDisplay.from_estimator(
-    rf_model, X_test, ['bmi', 'blood_glucose_level'], kind='average', grid_resolution=50
-)
-plt.show()
-
-# Threshold Analysis
-avg_glucose_by_diabetes = diabetes_data.groupby('diabetes')['blood_glucose_level'].mean()
-avg_bmi_by_diabetes = diabetes_data.groupby('diabetes')['bmi'].mean()
-
-threshold_glucose = avg_glucose_by_diabetes[1] * 0.9  # 90% of diabetic group mean
-threshold_bmi = avg_bmi_by_diabetes[1] * 0.9          # 90% of diabetic group mean
-
-print(f"Average Blood Glucose Levels (Diabetes=1): {avg_glucose_by_diabetes[1]:.2f}")
-print(f"Average BMI (Diabetes=1): {avg_bmi_by_diabetes[1]:.2f}")
-print(f"Suggested Blood Glucose Threshold: {threshold_glucose:.2f}")
-print(f"Suggested BMI Threshold: {threshold_bmi:.2f}")
-
 
 # ##################################################
 # #<<<<<<<<<<<<<<<< End of Section >>>>>>>>>>>>>>>>#
